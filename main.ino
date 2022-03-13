@@ -1,15 +1,15 @@
 
-//#include "LoRaWan_APP.h"
 #include "Arduino.h"
 #include "rubendisplay.h"
 
 int count;
-RubenDisplay disp;
+RubenDisplay *disp;
 
 void setup()
 {
 	Serial.begin(115200);
 	Serial.printf("Booting version: 0.1\n");
+	disp = new RubenDisplay();
 	count = 0;
 }
 
@@ -21,10 +21,6 @@ void loop()
 	char text[11];
 	snprintf(text, 11, "TEST %d", count);
 	Serial.println(text);
-	//	disp.WriteOut(text);
+	disp->WriteOut(text);
 	delay(100);
-}
-
-void WriteDisplay(char *text)
-{
 }
