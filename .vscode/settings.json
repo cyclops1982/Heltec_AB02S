@@ -1,0 +1,6 @@
+{
+  "arduino.additionalUrls": [
+    "https://github.com/HelTecAutomation/CubeCell-Arduino/releases/download/V1.4.0/package_CubeCell_index.json"
+  ],
+  "arduino.logLevel": "verbose"
+}
