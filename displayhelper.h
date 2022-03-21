@@ -1,15 +1,15 @@
-#ifndef RUBENDISPLAY_H
-#define RUBENDISPLAY_H
+#ifndef DISPLAYHELPER_H
+#define DISPLAYHELPER_H
 
 #include <Wire.h>
 #include "Arduino.h"
 #include "HT_SSD1306Wire.h"
 
-class RubenDisplay
+class DisplayHelper
 {
 private:
 public:
-    RubenDisplay();
+    DisplayHelper();
     void WriteOut(char *text);
 };
 

@@ -2,27 +2,35 @@
 #include <Arduino.h>
 #include <VL53L0X.h>
 #include <Wire.h>
-#include "rubendisplay.h"
+#include "displayhelper.h"
 
-RubenDisplay *disp;
+#define VERSION "0.2"
+
+DisplayHelper *disp;
 VL53L0X sensor;
 
 void setup()
 {
 	Serial.begin(115200);
-	Serial.printf("Booting version: 0.1\n");
-	Wire.begin();
+	Serial.printf("Booting version: %s\n", VERSION);
 
+	disp = new DisplayHelper();
+	disp->WriteOut("Loading...");
+
+	// Enable vExt output voltage
 	pinMode(Vext, OUTPUT);
-	digitalWrite(Vext, LOW); // set vext to high
+	digitalWrite(Vext, LOW);
+	delay(10);
 
-	disp = new RubenDisplay();
+	// Begin i2c
+	Wire.begin();
 
 	sensor.setTimeout(500);
 	while (!sensor.init())
 	{
 
 		Serial.println("Failed to detect and initialize sensor!");
+		disp->WriteOut("Error");
 		delay(1000);
 	}
 }
