@@ -6,49 +6,74 @@
 
 #define VERSION "0.2"
 
+static TimerEvent_t wakeUp;
+bool lowpower = false;
 DisplayHelper *disp;
 VL53L0X sensor;
+
+void onWakeUp()
+{
+	Serial.printf("Woke up!\r\n");
+	lowpower = false;
+}
 
 void setup()
 {
 	Serial.begin(115200);
 	Serial.printf("Booting version: %s\n", VERSION);
 
-	disp = new DisplayHelper();
-	disp->WriteOut("Loading...");
-
-	// Enable vExt output voltage
-	pinMode(Vext, OUTPUT);
-	digitalWrite(Vext, LOW);
-	delay(10);
-
-	// Begin i2c
-	Wire.begin();
-
-	sensor.setTimeout(500);
-	while (!sensor.init())
-	{
-
-		Serial.println("Failed to detect and initialize sensor!");
-		disp->WriteOut("Error");
-		delay(1000);
-	}
+	TimerInit(&wakeUp, onWakeUp);
 }
 
 void loop()
 {
-	byte error, address;
-	int nDevices;
-
-	Serial.println("Scanning...");
-	if (sensor.timeoutOccurred())
+	if (lowpower)
 	{
-		Serial.print(" TIMEOUT");
+		lowPowerHandler();
 	}
+	else
+	{
+		byte error, address;
+		int nDevices;
 
-	char text[30];
-	snprintf(text, 30, "Distance: %dmm", sensor.readRangeSingleMillimeters());
-	Serial.println(text);
-	disp->WriteOut(text);
-	delay(1000);
+		disp = new DisplayHelper();
+		disp->WriteOut("Loading...");
+
+		// Enable vExt output voltage
+		pinMode(Vext, OUTPUT);
+		digitalWrite(Vext, LOW);
+		delay(10);
+
+		// Begin i2c
+		Wire.begin();
+
+		sensor.setTimeout(500);
+		while (!sensor.init())
+		{
+
+			Serial.println("Failed to detect and initialize sensor!");
+			disp->WriteOut("Sensor error");
+			delay(1000);
+		}
+
+		Serial.println("Scanning...");
+		if (sensor.timeoutOccurred())
+		{
+			Serial.print("TIMEOUT");
+		}
+
+		char text[30];
+		snprintf(text, 30, "Distance: %dmm", sensor.readRangeSingleMillimeters());
+		Serial.println(text);
+		disp->WriteOut(text);
+		delay(1000);
+
+		Wire.end();
+		digitalWrite(Vext, HIGH);
+		delete disp;
+
+		lowpower = true;
+		TimerSetValue(&wakeUp, 10000); // trigger after 10s
+		TimerStart(&wakeUp);
+	}
 }
