@@ -1,5 +1,7 @@
 #include "displayhelper.h"
 
+SSD1306Wire display(0x3c, 500000, SDA, SCL, GEOMETRY_128_64, GPIO10);
+
 DisplayHelper::DisplayHelper()
 {
     display.init();

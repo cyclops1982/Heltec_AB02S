@@ -2,11 +2,7 @@
 #define GPSHELPER_H
 
 #include <Arduino.h>
-#include <softSerial.h>
-#include <TinyGPS++.h>
-
-TinyGPSPlus gps;
-softSerial ss(GPIO5 /*TX pin*/, GPIO3 /*RX pin*/);
+#include <GPS_Air530.h>
 
 class GPSHelper
 {
