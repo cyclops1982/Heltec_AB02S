@@ -3,6 +3,7 @@
 #include <VL53L0X.h>
 #include <Wire.h>
 #include "displayhelper.h"
+#include "gpshelper.h"
 
 #define VERSION "0.2"
 
@@ -68,7 +69,13 @@ void loop()
 		disp->WriteOut(text);
 		delay(1000);
 
+		GPSHelper *gpsh = new GPSHelper();
+		gpsh->WriteStuff();
+
+		delete gpsh;
+
 		Wire.end();
+
 		digitalWrite(Vext, HIGH);
 		delete disp;
 

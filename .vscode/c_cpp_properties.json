@@ -12,6 +12,10 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
+                "/home/cyclops/Arduino/libraries/TinyGPSPlus/src",
+                "/home/cyclops/Arduino/libraries/VL53L0X",
+                "/home/cyclops/.arduino15/packages/CubeCell/hardware/CubeCell/1.4.0/libraries/DISPLAY/src/",
+                "/home/cyclops/.arduino15/packages/CubeCell/hardware/CubeCell/1.4.0/libraries/Basics/src/",
                 "/home/cyclops/.arduino15/packages/CubeCell/hardware/CubeCell/1.4.0/cores/asr650x/board/",
                 "/home/cyclops/.arduino15/packages/CubeCell/hardware/CubeCell/1.4.0/cores/asr650x/board/src/",
                 "/home/cyclops/.arduino15/packages/CubeCell/hardware/CubeCell/1.4.0/cores/asr650x/board/inc/",
