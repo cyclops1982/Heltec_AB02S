@@ -1,5 +1,6 @@
 
 #include <Arduino.h>
+#include <LoRaWan_APP.h>
 #include <VL53L0X.h>
 #include <Wire.h>
 #include "displayhelper.h"
