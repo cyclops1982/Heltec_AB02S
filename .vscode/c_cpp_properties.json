@@ -62,6 +62,7 @@
                 "__asr650x__", /* Used by LoraWAN library */
                 "CubeCell_GPS", /* Used by various cubecell libs to indicate which board it is */
                 "REGION_EU868", /* Lora region */
+                "__cplusplus" /* We're doing C++ it seems */
 
             ]
         }

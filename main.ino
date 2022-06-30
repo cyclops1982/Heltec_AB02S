@@ -1,21 +1,16 @@
 
 #include <Arduino.h>
-#include <LoRaWan_APP.h>
-#include <VL53L0X.h>
-#include <Wire.h>
-#include "displayhelper.h"
-#include "gpshelper.h"
+#include "LoraWAN/LoRaWan_APP.h"
+#include "LoraWAN/LoRaWan_Config.h"
 
 #define VERSION "0.2"
 
 static TimerEvent_t wakeUp;
 bool lowpower = false;
-DisplayHelper *disp;
-VL53L0X sensor;
 
 void onWakeUp()
 {
-	Serial.printf("Woke up!\r\n");
+	Serial.printf("Woke up!\n");
 	lowpower = false;
 }
 
@@ -23,6 +18,8 @@ void setup()
 {
 	Serial.begin(115200);
 	Serial.printf("Booting version: %s\n", VERSION);
+
+	LoRaWAN.ifskipjoin();
 
 	TimerInit(&wakeUp, onWakeUp);
 }
@@ -35,53 +32,80 @@ void loop()
 	}
 	else
 	{
-		byte error, address;
-		int nDevices;
-
-		disp = new DisplayHelper();
-		disp->WriteOut("Loading...");
-
-		// Enable vExt output voltage
-		pinMode(Vext, OUTPUT);
-		digitalWrite(Vext, LOW);
-		delay(10);
-
-		// Begin i2c
-		Wire.begin();
-
-		sensor.setTimeout(500);
-		while (!sensor.init())
+		switch (deviceState)
+		{
+		case DEVICE_STATE_INIT:
 		{
 
-			Serial.println("Failed to detect and initialize sensor!");
-			disp->WriteOut("Sensor error");
-			delay(1000);
+			LoRaWAN.generateDeveuiByChipID();
+
+			LoRaWAN.init(loraWanClass, loraWanRegion);
+			deviceState = DEVICE_STATE_JOIN;
 		}
 
-		Serial.println("Scanning...");
-		if (sensor.timeoutOccurred())
+		case DEVICE_STATE_JOIN:
 		{
-			Serial.print("TIMEOUT");
+			LoRaWAN.join();
+			break;
 		}
+		case DEVICE_STATE_SEND:
+		{
+			uint16_t batVol1 = getBatteryVoltageFloat();
+			Serial.printf("Send over %d\n", batVol1);
+			SetAppData(batVol1);
+			delay(100);
+			LoRaWAN.send();
 
-		char text[30];
-		snprintf(text, 30, "Distance: %dmm", sensor.readRangeSingleMillimeters());
-		Serial.println(text);
-		disp->WriteOut(text);
-		delay(1000);
+			deviceState = DEVICE_STATE_CYCLE;
+			break;
+		}
+		case DEVICE_STATE_CYCLE:
+		{
+			// Schedule next packet transmission
+			txDutyCycleTime = appTxDutyCycle + randr(0, APP_TX_DUTYCYCLE_RND);
+			LoRaWAN.cycle(txDutyCycleTime);
+			deviceState = DEVICE_STATE_SLEEP;
+			break;
+		}
+		case DEVICE_STATE_SLEEP:
+		{
+			LoRaWAN.sleep();
+			lowpower = true;
+			TimerSetValue(&wakeUp, 10000); // trigger after 10s
+			TimerStart(&wakeUp);
 
-		GPSHelper *gpsh = new GPSHelper();
-		gpsh->WriteStuff();
-
-		delete gpsh;
-
-		Wire.end();
-
-		digitalWrite(Vext, HIGH);
-		delete disp;
-
-		lowpower = true;
-		TimerSetValue(&wakeUp, 10000); // trigger after 10s
-		TimerStart(&wakeUp);
+			break;
+		}
+		default:
+		{
+			deviceState = DEVICE_STATE_INIT;
+			break;
+		}
+		}
 	}
+}
+
+static void SetAppData(uint16_t data)
+{
+	appDataSize = 4;
+	appData[0] = 0x00;
+	appData[1] = 0x01;
+	appData[2] = data >> 8;
+	appData[3] = data;
+}
+
+static uint16_t getBatteryVoltageFloat(void)
+{
+	float temp = 0;
+	pinMode(VBAT_ADC_CTL, OUTPUT);
+	digitalWrite(VBAT_ADC_CTL, LOW);
+
+	delay(50);
+
+	for (int i = 0; i < 50; i++)
+	{ // read 50 times and get average
+		temp += analogReadmV(ADC);
+	}
+	pinMode(VBAT_ADC_CTL, INPUT);
+	return (uint16_t)((temp / 50) * 2);
 }
